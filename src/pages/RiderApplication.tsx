@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Truck, 
   MapPin, 
@@ -20,11 +22,11 @@ import {
   Clock,
   Star
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export const RiderApplication = () => {
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -36,17 +38,46 @@ export const RiderApplication = () => {
     whyJoin: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const applicationId = `APP-${Math.floor(Math.random() * 900000) + 100000}`;
-    
-    toast({
-      title: "Application Submitted!",
-      description: `Your application ${applicationId} has been received. We'll contact you within 24 hours.`,
-    });
+    setIsSubmitting(true);
 
-    setIsSubmitted(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-application', {
+        body: {
+          role: 'rider',
+          full_name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          city: formData.city,
+          experience_years: parseInt(formData.experience.split('-')[0]) || 0,
+          vehicle_type: formData.vehicleType
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.id) {
+        setIsSubmitted(true);
+        toast({
+          title: "Application Submitted!",
+          description: "We've received your application and will review it within 24-48 hours.",
+        });
+      } else {
+        throw new Error('Failed to submit application');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -327,9 +358,9 @@ export const RiderApplication = () => {
                   type="submit" 
                   size="lg"
                   className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                  disabled={!formData.fullName || !formData.phone || !formData.city || !formData.vehicleType || !formData.experience}
+                  disabled={!formData.fullName || !formData.phone || !formData.city || !formData.vehicleType || !formData.experience || isSubmitting}
                 >
-                  Submit Application
+                  {isSubmitting ? "Submitting..." : "Submit Application"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

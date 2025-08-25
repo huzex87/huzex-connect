@@ -1,1 +1,19 @@
 project_id = "ktuwjnjwnqwpcmcjqlii"
+
+[functions.create-order]
+verify_jwt = false
+
+[functions.get-order]
+verify_jwt = false
+
+[functions.create-application]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.assign-rider]
+verify_jwt = true
+
+[functions.update-order-status]
+verify_jwt = true

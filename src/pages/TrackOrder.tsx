@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Search, 
   Package, 
@@ -28,34 +29,50 @@ export const TrackOrder = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = {
-        orderId: orderId || "HX-2025-123456",
-        status: "en_route",
-        pickup: "Lagos (Victoria Island)",
-        dropoff: "Abuja (Central)",
-        item: "Electronics - Laptop",
-        weightKg: "2.5",
-        speed: "same_day",
-        customerPhone: "+234 800 123 4567",
-        riderId: "RDR-001",
-        riderName: "Ibrahim Mohammed",
-        riderPhone: "+234 901 234 5678",
-        eta: "2025-01-25T16:00:00Z",
-        trackingUrl: `https://track.huzexexpress.com/${orderId}`,
-        timeline: [
-          { status: "created", timestamp: "2025-01-25T08:00:00Z", description: "Order created and confirmed" },
-          { status: "assigned", timestamp: "2025-01-25T08:30:00Z", description: "Assigned to rider Ibrahim M." },
-          { status: "picked_up", timestamp: "2025-01-25T09:15:00Z", description: "Package picked up from Lagos" },
-          { status: "en_route", timestamp: "2025-01-25T10:00:00Z", description: "On the way to Abuja", current: true },
-          { status: "out_for_delivery", timestamp: null, description: "Out for delivery in Abuja" },
-          { status: "delivered", timestamp: null, description: "Package delivered" }
-        ]
-      };
-      setTrackingData(mockData);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-order', {
+        body: { order_id: orderId }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        const transformedData = {
+          orderId: data.order_id,
+          status: data.status,
+          pickup: data.pickup_address,
+          dropoff: data.dropoff_address,
+          item: data.item_description,
+          weightKg: data.weight_kg?.toString() || "N/A",
+          speed: data.speed,
+          customerPhone: data.customer_phone,
+          riderId: data.rider?.id,
+          riderName: data.rider?.name,
+          riderPhone: data.rider?.phone,
+          eta: data.eta,
+          trackingUrl: data.tracking_url,
+          timeline: data.timeline
+        };
+        setTrackingData(transformedData);
+      } else {
+        toast({
+          title: "Order not found",
+          description: "Please check your order ID and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error tracking order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to track order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const copyTrackingLink = () => {

@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Package, 
   MapPin, 
@@ -18,11 +20,12 @@ import {
   Phone,
   User
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export const SendPackage = () => {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string>("");
   const [orderData, setOrderData] = useState({
     pickup: "",
     dropoff: "",
@@ -34,19 +37,47 @@ export const SendPackage = () => {
     customerName: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Generate order ID
-    const orderId = `HX-2025-${Math.floor(Math.random() * 900000) + 100000}`;
-    
-    toast({
-      title: "Order Created Successfully!",
-      description: `Your order ${orderId} has been created. You'll receive tracking updates via SMS.`,
-    });
+    setIsLoading(true);
 
-    // Move to confirmation step
-    setCurrentStep(4);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-order', {
+        body: {
+          pickup_address: orderData.pickup,
+          dropoff_address: orderData.dropoff,
+          item_description: orderData.item,
+          weight_kg: parseFloat(orderData.weightKg),
+          speed: orderData.speed,
+          payment_method: orderData.paymentMethod === 'paystack' ? 'paystack' : 'cash_on_delivery',
+          customer_phone: orderData.customerPhone
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.order_id) {
+        setCreatedOrderId(data.order_id);
+        toast({
+          title: "Order Created Successfully!",
+          description: `Your order ${data.order_id} has been created. You'll receive tracking updates via SMS.`,
+        });
+        setCurrentStep(4);
+      } else {
+        throw new Error('Failed to create order');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const speedOptions = [
@@ -264,9 +295,9 @@ export const SendPackage = () => {
                     type="submit" 
                     size="lg"
                     className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                    disabled={!orderData.pickup || !orderData.dropoff || !orderData.speed}
+                    disabled={!orderData.pickup || !orderData.dropoff || !orderData.speed || isLoading}
                   >
-                    Create Order
+                    {isLoading ? "Creating Order..." : "Create Order"}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
@@ -295,7 +326,7 @@ export const SendPackage = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Order ID:</span>
-                      <span className="font-mono">HX-2025-{Math.floor(Math.random() * 900000) + 100000}</span>
+                      <span className="font-mono">{createdOrderId}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>From:</span>
