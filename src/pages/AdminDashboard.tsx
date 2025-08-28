@@ -1,7 +1,11 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/Layout/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   BarChart3, 
   Package, 
@@ -13,30 +17,137 @@ import {
   Phone,
   CheckCircle,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  Eye,
+  XCircle
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export const AdminDashboard = () => {
-  const stats = [
-    { title: "Total Orders", value: "1,547", change: "+12%", icon: Package, color: "text-primary" },
-    { title: "Active Riders", value: "148", change: "+5%", icon: Truck, color: "text-secondary" },
-    { title: "Monthly Revenue", value: "₦2.4M", change: "+18%", icon: DollarSign, color: "text-accent" },
-    { title: "On-Time Rate", value: "95.2%", change: "+2.1%", icon: Clock, color: "text-green-600" }
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    activeRiders: 0,
+    todayRevenue: 0,
+    pendingApplications: 0
+  });
+  const [orders, setOrders] = useState<any[]>([]);
+  const [riders, setRiders] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const recentOrders = [
-    { id: "HX-2025-001234", from: "Lagos VI", to: "Abuja Central", status: "en_route", rider: "Ibrahim M.", time: "2h ago" },
-    { id: "HX-2025-001235", from: "Abuja Central", to: "Port Harcourt", status: "delivered", rider: "Amaka O.", time: "4h ago" },
-    { id: "HX-2025-001236", from: "Lagos Ikeja", to: "Kano", status: "pending", rider: "Unassigned", time: "1h ago" },
-    { id: "HX-2025-001237", from: "Port Harcourt", to: "Lagos VI", status: "picked_up", rider: "Musa A.", time: "30m ago" }
-  ];
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  const riders = [
-    { name: "Ibrahim Mohammed", rating: 4.9, deliveries: 245, status: "active", location: "Lagos", phone: "+234 901 234 5678" },
-    { name: "Amaka Okafor", rating: 4.8, deliveries: 189, status: "active", location: "Abuja", phone: "+234 802 345 6789" },
-    { name: "Musa Abdullah", rating: 4.7, deliveries: 156, status: "offline", location: "Kano", phone: "+234 703 456 7890" },
-    { name: "Chika Okonkwo", rating: 4.6, deliveries: 134, status: "active", location: "Port Harcourt", phone: "+234 804 567 8901" }
-  ];
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch orders
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      // Fetch riders
+      const { data: ridersData } = await supabase
+        .from("riders")
+        .select("*");
+
+      // Fetch applications
+      const { data: applicationsData } = await supabase
+        .from("applications")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      setOrders(ordersData || []);
+      setRiders(ridersData || []);
+      setApplications(applicationsData || []);
+
+      // Calculate stats
+      setStats({
+        totalOrders: ordersData?.length || 0,
+        activeRiders: ridersData?.filter(r => r.status === 'active').length || 0,
+        todayRevenue: ordersData?.reduce((acc, order) => acc + (order.amount || 0), 0) || 0,
+        pendingApplications: applicationsData?.filter(a => a.status === 'pending').length || 0
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const approveApplication = async (applicationId: string) => {
+    try {
+      // Update application status
+      const { error } = await supabase
+        .from("applications")
+        .update({ status: 'approved' })
+        .eq("id", applicationId);
+
+      if (error) throw error;
+
+      // Create rider record
+      const application = applications.find(a => a.id === applicationId);
+      if (application) {
+        const { error: riderError } = await supabase
+          .from("riders")
+          .insert({
+            name: application.full_name,
+            phone: application.phone,
+            vehicle_type: application.vehicle_type,
+            status: 'active'
+          });
+
+        if (riderError) throw riderError;
+      }
+
+      toast({
+        title: "Application Approved",
+        description: "Rider has been added to the system",
+      });
+
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error approving application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve application",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const rejectApplication = async (applicationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({ status: 'rejected' })
+        .eq("id", applicationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Application Rejected",
+        description: "Application has been rejected",
+      });
+
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error rejecting application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject application",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -46,6 +157,9 @@ export const AdminDashboard = () => {
       case "picked_up": return "bg-orange-500";
       case "delivered": return "bg-green-500";
       case "cancelled": return "bg-red-500";
+      case "approved": return "bg-green-500";
+      case "rejected": return "bg-red-500";
+      case "active": return "bg-green-500";
       default: return "bg-gray-400";
     }
   };
@@ -54,38 +168,80 @@ export const AdminDashboard = () => {
     return status === "active" ? "text-green-600" : "text-gray-400";
   };
 
-  return (
-    <div className="min-h-screen bg-muted/20 py-8">
-      <div className="container max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Admin <span className="text-primary">Dashboard</span>
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Real-time operations management for Huzex Express
-          </p>
+  if (isLoading) {
+    return (
+      <ProtectedRoute allowedRoles={['admin']}>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
+      </ProtectedRoute>
+    );
+  }
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index} className="bg-card/50 backdrop-blur-sm">
+  return (
+    <ProtectedRoute allowedRoles={['admin']}>
+      <div className="min-h-screen bg-muted/20 py-8">
+        <div className="container max-w-7xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Admin <span className="text-primary">Dashboard</span>
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Real-time operations management for Huzex Express
+            </p>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className={`text-sm ${stat.color}`}>{stat.change} from last month</p>
+                    <p className="text-sm text-muted-foreground">Total Orders</p>
+                    <p className="text-3xl font-bold">{stats.totalOrders}</p>
                   </div>
-                  <div className={`bg-muted/50 rounded-full p-3 ${stat.color}`}>
-                    <stat.icon className="h-6 w-6" />
-                  </div>
+                  <Package className="h-8 w-8 text-primary" />
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+
+            <Card className="bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Active Riders</p>
+                    <p className="text-3xl font-bold">{stats.activeRiders}</p>
+                  </div>
+                  <Truck className="h-8 w-8 text-secondary" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Revenue</p>
+                    <p className="text-3xl font-bold">₦{stats.todayRevenue.toLocaleString()}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-accent" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-orange-500/5 to-orange-500/10 border-orange-500/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pending Applications</p>
+                    <p className="text-3xl font-bold">{stats.pendingApplications}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-orange-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Main Content */}
         <Tabs defaultValue="orders" className="space-y-6">
@@ -124,40 +280,40 @@ export const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentOrders.map((order, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/20 transition-colors">
+                  {orders.slice(0, 10).map((order) => (
+                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/20 transition-colors">
                       <div className="flex items-center space-x-4">
                         <div className={`w-3 h-3 rounded-full ${getStatusColor(order.status)}`}></div>
                         <div>
-                          <p className="font-medium font-mono text-sm">{order.id}</p>
+                          <p className="font-medium font-mono text-sm">{order.order_id}</p>
                           <p className="text-sm text-muted-foreground">
-                            {order.from} → {order.to}
+                            {order.pickup_address} → {order.dropoff_address}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                          <p className="text-sm font-medium">
-                            {order.rider !== "Unassigned" ? order.rider : (
-                              <span className="text-orange-600">Unassigned</span>
-                            )}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{order.time}</p>
-                        </div>
                         <Badge 
                           variant="secondary" 
                           className={`${getStatusColor(order.status)} text-white border-0`}
                         >
-                          {order.status.replace('_', ' ')}
+                          {order.status.replace('_', ' ').toUpperCase()}
                         </Badge>
-                        {order.rider === "Unassigned" && (
-                          <Button size="sm" variant="outline">
-                            Assign Rider
-                          </Button>
-                        )}
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
+                  {orders.length === 0 && (
+                    <div className="text-center py-8">
+                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-semibold mb-2">No Orders Yet</h3>
+                      <p className="text-muted-foreground">Orders will appear here once customers start using the service.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -174,15 +330,15 @@ export const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {riders.map((rider, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/20 transition-colors">
+                  {riders.map((rider) => (
+                    <div key={rider.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/20 transition-colors">
                       <div className="flex items-center space-x-4">
                         <div className={`w-3 h-3 rounded-full ${rider.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                         <div>
                           <p className="font-medium">{rider.name}</p>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3" />
-                            <span>{rider.location}</span>
+                            <span>{rider.city}</span>
                             <Phone className="h-3 w-3 ml-2" />
                             <span>{rider.phone}</span>
                           </div>
@@ -194,14 +350,13 @@ export const AdminDashboard = () => {
                           <p className="text-xs text-muted-foreground">Rating</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-medium">{rider.deliveries}</p>
+                          <p className="text-sm font-medium">{rider.total_deliveries}</p>
                           <p className="text-xs text-muted-foreground">Deliveries</p>
                         </div>
                         <Badge 
-                          variant="outline" 
-                          className={getRiderStatusColor(rider.status)}
+                          className={`${getStatusColor(rider.status)} text-white`}
                         >
-                          {rider.status}
+                          {rider.status.toUpperCase()}
                         </Badge>
                         <Button size="sm" variant="outline">
                           <Phone className="h-4 w-4" />
@@ -209,6 +364,13 @@ export const AdminDashboard = () => {
                       </div>
                     </div>
                   ))}
+                  {riders.length === 0 && (
+                    <div className="text-center py-8">
+                      <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-semibold mb-2">No Riders Yet</h3>
+                      <p className="text-muted-foreground">Approved rider applications will appear here.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -286,13 +448,56 @@ export const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">No Pending Applications</h3>
-                    <p className="text-muted-foreground">
-                      All rider applications have been reviewed. New applications will appear here.
-                    </p>
-                  </div>
+                  {applications.map((application) => (
+                    <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/20 transition-colors">
+                      <div className="space-y-1">
+                        <p className="font-medium">{application.full_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {application.phone} • {application.email}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {application.vehicle_type} • {application.experience_years} years experience
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Applied: {new Date(application.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${getStatusColor(application.status)} text-white`}>
+                          {application.status.toUpperCase()}
+                        </Badge>
+                        {application.status === 'pending' && (
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => approveApplication(application.id)}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => rejectApplication(application.id)}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {applications.length === 0 && (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-semibold mb-2">No Applications Yet</h3>
+                      <p className="text-muted-foreground">
+                        Rider applications will appear here when people apply to join your team.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -300,5 +505,6 @@ export const AdminDashboard = () => {
         </Tabs>
       </div>
     </div>
+    </ProtectedRoute>
   );
 };

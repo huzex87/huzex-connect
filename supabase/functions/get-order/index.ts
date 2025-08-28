@@ -17,8 +17,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
     );
 
-    const url = new URL(req.url);
-    const order_id = url.pathname.split('/').pop();
+    // Parse request body to get order_id
+    const body = await req.json();
+    const order_id = body.order_id;
 
     if (!order_id) {
       return new Response(
