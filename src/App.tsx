@@ -16,6 +16,11 @@ import { TrackOrder } from "./pages/TrackOrder";
 import { WhatsAppDemo } from "./pages/WhatsAppDemo";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { RiderApplication } from "./pages/RiderApplication";
+import { Pricing } from "./pages/Pricing";
+import { Contact } from "./pages/Contact";
+import { Help } from "./pages/Help";
+import { UserProfile } from "./pages/UserProfile";
+import { NotificationCenter } from "./pages/NotificationCenter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +46,11 @@ const App = () => (
                 <Route path="/whatsapp" element={<WhatsAppDemo />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/rider" element={<RiderApplication />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/notifications" element={<NotificationCenter />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
