@@ -49,7 +49,7 @@ export const SendPackage = () => {
           item_description: orderData.item,
           weight_kg: parseFloat(orderData.weightKg),
           speed: orderData.speed,
-          payment_method: orderData.paymentMethod === 'paystack' ? 'paystack' : 'cash_on_delivery',
+          payment_method: 'cash_on_delivery',
           customer_phone: orderData.customerPhone
         }
       });
@@ -284,7 +284,7 @@ export const SendPackage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pod">Pay on Delivery (Cash)</SelectItem>
-                      <SelectItem value="paystack">Pay Now (Card/Bank Transfer)</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

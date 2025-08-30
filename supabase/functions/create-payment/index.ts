@@ -9,7 +9,7 @@ const corsHeaders = {
 interface PaymentRequest {
   order_id: string;
   amount: number;
-  payment_method: 'paystack' | 'bank_transfer' | 'cash_on_delivery';
+  payment_method: 'bank_transfer' | 'cash_on_delivery';
 }
 
 serve(async (req) => {
@@ -62,11 +62,7 @@ serve(async (req) => {
     let payment_reference = '';
     let payment_url = '';
 
-    if (body.payment_method === 'paystack') {
-      // Integrate with Paystack API (placeholder)
-      payment_reference = `PAY_${Date.now()}`;
-      payment_url = `https://paystack.com/pay/${payment_reference}`;
-    } else if (body.payment_method === 'bank_transfer') {
+    if (body.payment_method === 'bank_transfer') {
       payment_reference = `BANK_${Date.now()}`;
       payment_status = 'pending_verification';
     } else if (body.payment_method === 'cash_on_delivery') {
