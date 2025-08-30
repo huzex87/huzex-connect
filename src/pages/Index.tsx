@@ -32,6 +32,16 @@ const Index = () => {
               <Card className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6 text-center">
                   <Truck className="h-8 w-8 text-secondary mx-auto mb-2" />
+                  <h3 className="font-semibold mb-2">CargoPool</h3>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/cargopool">Share Space</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6 text-center">
+                  <Package className="h-8 w-8 text-accent mx-auto mb-2" />
                   <h3 className="font-semibold mb-2">Track Orders</h3>
                   <Button asChild variant="outline" size="sm">
                     <Link to="/track">Track</Link>

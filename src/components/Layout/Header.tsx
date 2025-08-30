@@ -16,6 +16,7 @@ export const Header = () => {
   const navigation = [
     { name: "Home", href: "/", icon: Package },
     { name: "Send Package", href: "/send", icon: Package },
+    { name: "CargoPool", href: "/cargopool", icon: Truck },
     { name: "Track Order", href: "/track", icon: MapPin },
     ...(user ? [] : [{ name: "Become a Rider", href: "/rider", icon: Truck }]),
   ];

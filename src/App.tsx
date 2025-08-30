@@ -21,6 +21,7 @@ import { Pricing } from "./pages/Pricing";
 import { Contact } from "./pages/Contact";
 import { Help } from "./pages/Help";
 import { UserProfile } from "./pages/UserProfile";
+import { CargoPool } from "./pages/CargoPool";
 import { NotificationCenter } from "./pages/NotificationCenter";
 import NotFound from "./pages/NotFound";
 
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="/profile" element={<UserProfile />} />
+                <Route path="/cargopool" element={<CargoPool />} />
                 <Route path="/notifications" element={<NotificationCenter />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
