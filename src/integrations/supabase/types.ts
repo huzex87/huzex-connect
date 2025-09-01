@@ -283,11 +283,121 @@ export type Database = {
         }
         Relationships: []
       }
+      route_bookings: {
+        Row: {
+          booking_reference: string
+          created_at: string | null
+          customer_id: string | null
+          dropoff_address: string
+          id: string
+          item_description: string
+          pickup_address: string
+          price: number
+          route_id: string | null
+          status: string | null
+          updated_at: string | null
+          weight_kg: number
+        }
+        Insert: {
+          booking_reference: string
+          created_at?: string | null
+          customer_id?: string | null
+          dropoff_address: string
+          id?: string
+          item_description: string
+          pickup_address: string
+          price: number
+          route_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          weight_kg: number
+        }
+        Update: {
+          booking_reference?: string
+          created_at?: string | null
+          customer_id?: string | null
+          dropoff_address?: string
+          id?: string
+          item_description?: string
+          pickup_address?: string
+          price?: number
+          route_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_bookings_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "shared_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_routes: {
+        Row: {
+          available_capacity_kg: number
+          created_at: string | null
+          departure_date: string
+          departure_time: string
+          destination: string
+          driver_id: string | null
+          id: string
+          origin: string
+          price_per_kg: number
+          route_name: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          available_capacity_kg?: number
+          created_at?: string | null
+          departure_date: string
+          departure_time: string
+          destination: string
+          driver_id?: string | null
+          id?: string
+          origin: string
+          price_per_kg: number
+          route_name: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          available_capacity_kg?: number
+          created_at?: string | null
+          departure_date?: string
+          departure_time?: string
+          destination?: string
+          driver_id?: string | null
+          id?: string
+          origin?: string
+          price_per_kg?: number
+          route_name?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_routes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      generate_booking_reference: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_order_id: {
         Args: Record<PropertyKey, never>
         Returns: string
