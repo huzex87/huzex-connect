@@ -59,29 +59,76 @@ export const OrderTrackingMap: React.FC<OrderTrackingMapProps> = ({
             </div>
           </div>
 
-          {/* Map Placeholder */}
-          <div className="relative h-64 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center">
-            <div className="text-center p-4">
-              <MapPin className="h-12 w-12 text-primary mx-auto mb-2" />
-              <p className="text-muted-foreground mb-4">
-                Interactive map view coming soon
-              </p>
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => openInMaps(pickupAddress, 'Pickup Location')}
-                >
-                  View Pickup on Maps
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => openInMaps(dropoffAddress, 'Delivery Location')}
-                >
-                  View Delivery on Maps
-                </Button>
+          {/* Dummy Map Interface */}
+          <div className="relative h-64 bg-muted rounded-lg overflow-hidden">
+            {/* Grid pattern to simulate map */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
+                {Array.from({ length: 48 }).map((_, i) => (
+                  <div key={i} className="border border-muted-foreground/20"></div>
+                ))}
               </div>
+            </div>
+            
+            {/* Route line simulation */}
+            <svg className="absolute inset-0 w-full h-full">
+              <path
+                d="M 50 200 Q 150 100 250 150"
+                stroke="hsl(var(--primary))"
+                strokeWidth="3"
+                fill="none"
+                strokeDasharray="5,5"
+                className="animate-pulse"
+              />
+            </svg>
+            
+            {/* Location markers */}
+            <div className="absolute top-4 left-4 flex items-center gap-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+              <MapPin className="h-3 w-3" />
+              Pickup
+            </div>
+            
+            <div className="absolute top-6 right-4 flex items-center gap-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+              <MapPin className="h-3 w-3" />
+              Delivery
+            </div>
+            
+            {/* Rider marker (if available) */}
+            {riderLocation && (
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs animate-bounce">
+                <Navigation className="h-3 w-3" />
+                Rider
+              </div>
+            )}
+            
+            {/* Map controls overlay */}
+            <div className="absolute bottom-4 right-4 space-y-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => openInMaps(pickupAddress, 'Pickup Location')}
+                className="bg-background/80 backdrop-blur-sm"
+              >
+                View Pickup
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => openInMaps(dropoffAddress, 'Delivery Location')}
+                className="bg-background/80 backdrop-blur-sm"
+              >
+                View Delivery
+              </Button>
+            </div>
+            
+            {/* Zoom controls */}
+            <div className="absolute top-4 right-4 flex flex-col gap-1">
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm">
+                +
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm">
+                -
+              </Button>
             </div>
           </div>
 
