@@ -102,21 +102,23 @@ export const OrderTrackingMap: React.FC<OrderTrackingMapProps> = ({
             )}
             
             {/* Map controls overlay */}
-            <div className="absolute bottom-4 right-4 space-y-2">
+            <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => openInMaps(pickupAddress, 'Pickup Location')}
-                className="bg-background/80 backdrop-blur-sm"
+                className="bg-background/80 backdrop-blur-sm flex items-center gap-2"
               >
+                <MapPin className="h-3 w-3" />
                 View Pickup
               </Button>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => openInMaps(dropoffAddress, 'Delivery Location')}
-                className="bg-background/80 backdrop-blur-sm"
+                className="bg-background/80 backdrop-blur-sm flex items-center gap-2"
               >
+                <MapPin className="h-3 w-3" />
                 View Delivery
               </Button>
             </div>

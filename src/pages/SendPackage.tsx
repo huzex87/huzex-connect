@@ -49,8 +49,9 @@ export const SendPackage = () => {
           item_description: orderData.item,
           weight_kg: parseFloat(orderData.weightKg),
           speed: orderData.speed,
-          payment_method: 'cash_on_delivery',
-          customer_phone: orderData.customerPhone
+          payment_method: orderData.paymentMethod || 'cash_on_delivery',
+          customer_phone: orderData.customerPhone,
+          customer_name: orderData.customerName
         }
       });
 
@@ -343,11 +344,24 @@ export const SendPackage = () => {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                  <Button variant="outline" onClick={() => {
+                    setCurrentStep(1);
+                    setOrderData({
+                      pickup: "",
+                      dropoff: "",
+                      item: "",
+                      weightKg: "",
+                      speed: "",
+                      paymentMethod: "",
+                      customerPhone: "",
+                      customerName: ""
+                    });
+                    setCreatedOrderId("");
+                  }}>
                     Send Another Package
                   </Button>
-                  <Button asChild>
-                    <a href="/track">Track This Order</a>
+                  <Button onClick={() => window.location.href = `/track?order_id=${createdOrderId}`}>
+                    Track This Order
                   </Button>
                 </div>
               </div>

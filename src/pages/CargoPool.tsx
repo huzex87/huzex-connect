@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Truck, 
   MapPin, 
@@ -20,21 +21,6 @@ import {
   Search
 } from "lucide-react";
 
-interface CargoRoute {
-  id: string;
-  origin: string;
-  destination: string;
-  departureDate: string;
-  availableSpace: number;
-  totalSpace: number;
-  pricePerKg: number;
-  estimatedArrival: string;
-  driverName: string;
-  driverRating: number;
-  vehicleType: string;
-  verified: boolean;
-}
-
 export const CargoPool = () => {
   const { toast } = useToast();
   const [searchOrigin, setSearchOrigin] = useState("");
@@ -42,65 +28,57 @@ export const CargoPool = () => {
   const [searchDate, setSearchDate] = useState("");
   const [packageWeight, setPackageWeight] = useState("");
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const [availableRoutes, setAvailableRoutes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const cargoRoutes: CargoRoute[] = [
-    {
-      id: "1",
-      origin: "Lagos (Victoria Island)",
-      destination: "Abuja (Central)",
-      departureDate: "2024-01-15",
-      availableSpace: 150,
-      totalSpace: 500,
-      pricePerKg: 800,
-      estimatedArrival: "2024-01-16 10:00",
-      driverName: "Ibrahim Musa",
-      driverRating: 4.8,
-      vehicleType: "20ft Container Truck",
-      verified: true
-    },
-    {
-      id: "2",
-      origin: "Lagos (Ikeja)",
-      destination: "Port Harcourt (GRA)",
-      departureDate: "2024-01-15",
-      availableSpace: 200,
-      totalSpace: 300,
-      pricePerKg: 650,
-      estimatedArrival: "2024-01-15 18:00",
-      driverName: "Adebayo Okafor",
-      driverRating: 4.9,
-      vehicleType: "15ft Box Truck",
-      verified: true
-    },
-    {
-      id: "3",
-      origin: "Abuja (Central)",
-      destination: "Kano (Sabon Gari)",
-      departureDate: "2024-01-16",
-      availableSpace: 80,
-      totalSpace: 400,
-      pricePerKg: 700,
-      estimatedArrival: "2024-01-16 20:00",
-      driverName: "Fatima Aliyu",
-      driverRating: 4.7,
-      vehicleType: "18ft Container Truck",
-      verified: true
-    },
-    {
-      id: "4",
-      origin: "Lagos (Victoria Island)",
-      destination: "Ibadan (Bodija)",
-      departureDate: "2024-01-15",
-      availableSpace: 100,
-      totalSpace: 250,
-      pricePerKg: 450,
-      estimatedArrival: "2024-01-15 16:00",
-      driverName: "Olumide Adebayo",
-      driverRating: 4.6,
-      vehicleType: "12ft Van",
-      verified: false
+  useEffect(() => {
+    fetchRoutes();
+  }, []);
+
+  const fetchRoutes = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('shared_routes')
+        .select(`
+          *,
+          riders (
+            name,
+            rating,
+            vehicle_type
+          )
+        `)
+        .eq('status', 'active')
+        .gte('departure_date', new Date().toISOString().split('T')[0]);
+
+      if (error) throw error;
+      
+      const formattedRoutes = data?.map(route => ({
+        id: route.id,
+        routeName: route.route_name,
+        origin: route.origin,
+        destination: route.destination,
+        departureDate: route.departure_date,
+        departureTime: route.departure_time,
+        availableCapacity: route.available_capacity_kg,
+        pricePerKg: route.price_per_kg,
+        driverName: route.riders?.name || 'Unknown Driver',
+        driverRating: route.riders?.rating || 5.0,
+        vehicle: route.riders?.vehicle_type || 'Vehicle'
+      })) || [];
+
+      setAvailableRoutes(formattedRoutes);
+    } catch (error) {
+      console.error('Error fetching routes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load routes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const cities = [
     "Lagos (Victoria Island)",
@@ -111,7 +89,7 @@ export const CargoPool = () => {
     "Ibadan (Bodija)"
   ];
 
-  const handleBookRoute = (routeId: string) => {
+  const handleBookRoute = async (routeId: string) => {
     if (!packageWeight) {
       toast({
         title: "Missing Information",
@@ -121,18 +99,53 @@ export const CargoPool = () => {
       return;
     }
 
-    const route = cargoRoutes.find(r => r.id === routeId);
+    const route = availableRoutes.find(r => r.id === routeId);
     const weight = parseFloat(packageWeight);
-    const totalCost = weight * (route?.pricePerKg || 0);
+    
+    if (!route || weight > route.availableCapacity) {
+      toast({
+        title: "Booking Error",
+        description: "Not enough capacity available for this weight.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    setSelectedRoute(routeId);
-    toast({
-      title: "Route Booked Successfully!",
-      description: `Your cargo space has been reserved. Total cost: ₦${totalCost.toLocaleString()}`
-    });
+    const totalCost = weight * route.pricePerKg;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('book-shared-route', {
+        body: {
+          route_id: routeId,
+          pickup_address: searchOrigin || 'TBD',
+          dropoff_address: searchDestination || 'TBD',
+          item_description: 'Package via CargoPool',
+          weight_kg: weight
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.booking_reference) {
+        setSelectedRoute(routeId);
+        toast({
+          title: "Route Booked Successfully!",
+          description: `Booking reference: ${data.booking_reference}. Total cost: ₦${totalCost.toLocaleString()}`
+        });
+        // Refresh routes to update capacity
+        fetchRoutes();
+      }
+    } catch (error) {
+      console.error('Error booking route:', error);
+      toast({
+        title: "Booking Failed",
+        description: "Failed to book the route. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const filteredRoutes = cargoRoutes.filter(route => {
+  const filteredRoutes = availableRoutes.filter(route => {
     return (!searchOrigin || route.origin.toLowerCase().includes(searchOrigin.toLowerCase())) &&
            (!searchDestination || route.destination.toLowerCase().includes(searchDestination.toLowerCase())) &&
            (!searchDate || route.departureDate === searchDate);
@@ -222,7 +235,11 @@ export const CargoPool = () => {
             <Badge variant="secondary">{filteredRoutes.length} routes found</Badge>
           </div>
 
-          {filteredRoutes.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredRoutes.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -257,15 +274,15 @@ export const CargoPool = () => {
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Calendar className="h-4 w-4" />
-                            <span>Departs: {route.departureDate}</span>
+                            <span>Departs: {new Date(route.departureDate).toLocaleDateString()}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4" />
-                            <span>Arrives: {route.estimatedArrival}</span>
+                            <span>Time: {route.departureTime}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <Truck className="h-4 w-4" />
-                            <span>{route.vehicleType}</span>
+                            <span>{route.vehicle}</span>
                           </div>
                         </div>
                       </div>
@@ -274,9 +291,7 @@ export const CargoPool = () => {
                       <div>
                         <div className="flex items-center space-x-2 mb-2">
                           <span className="font-medium">{route.driverName}</span>
-                          {route.verified && (
-                            <Shield className="h-4 w-4 text-green-500" />
-                          )}
+                          <Shield className="h-4 w-4 text-green-500" />
                         </div>
                         <div className="flex items-center space-x-1 mb-2">
                           <Star className="h-4 w-4 text-yellow-500 fill-current" />
@@ -285,7 +300,7 @@ export const CargoPool = () => {
                         <div className="text-sm text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Package className="h-4 w-4" />
-                            <span>{route.availableSpace}kg / {route.totalSpace}kg available</span>
+                            <span>{route.availableCapacity}kg available</span>
                           </div>
                         </div>
                       </div>
@@ -302,11 +317,11 @@ export const CargoPool = () => {
                         )}
                         <Button 
                           onClick={() => handleBookRoute(route.id)}
-                          disabled={route.availableSpace === 0 || selectedRoute === route.id}
+                          disabled={route.availableCapacity === 0 || selectedRoute === route.id}
                           className="w-full"
                         >
                           {selectedRoute === route.id ? "Booked" : 
-                           route.availableSpace === 0 ? "Full" : "Book Space"}
+                           route.availableCapacity === 0 ? "Full" : "Book Space"}
                         </Button>
                       </div>
                     </div>
@@ -316,13 +331,13 @@ export const CargoPool = () => {
                     {/* Capacity Bar */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Capacity Used</span>
-                        <span>{Math.round(((route.totalSpace - route.availableSpace) / route.totalSpace) * 100)}%</span>
+                        <span>Available Space</span>
+                        <span>{route.availableCapacity}kg</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div 
                           className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${((route.totalSpace - route.availableSpace) / route.totalSpace) * 100}%` }}
+                          style={{ width: `${Math.max(10, (route.availableCapacity / 500) * 100)}%` }}
                         />
                       </div>
                     </div>

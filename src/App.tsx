@@ -1,76 +1,84 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/Layout/Header";
 import { Footer } from "@/components/Layout/Footer";
-import { Suspense, lazy } from "react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ProtectedRoute } from "@/components/ui/protected-route";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { lazy, Suspense } from "react";
 
-// Lazy load all route components
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth").then(module => ({ default: module.Auth })));
-const Dashboard = lazy(() => import("./pages/Dashboard").then(module => ({ default: module.Dashboard })));
-const RiderDashboard = lazy(() => import("./pages/RiderDashboard").then(module => ({ default: module.RiderDashboard })));
-const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess").then(module => ({ default: module.PaymentSuccess })));
-const SendPackage = lazy(() => import("./pages/SendPackage").then(module => ({ default: module.SendPackage })));
-const TrackOrder = lazy(() => import("./pages/TrackOrder").then(module => ({ default: module.TrackOrder })));
-const WhatsAppDemo = lazy(() => import("./pages/WhatsAppDemo").then(module => ({ default: module.WhatsAppDemo })));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard").then(module => ({ default: module.AdminDashboard })));
-const RiderApplication = lazy(() => import("./pages/RiderApplication").then(module => ({ default: module.RiderApplication })));
-const Pricing = lazy(() => import("./pages/Pricing").then(module => ({ default: module.Pricing })));
-const Contact = lazy(() => import("./pages/Contact").then(module => ({ default: module.Contact })));
-const Help = lazy(() => import("./pages/Help").then(module => ({ default: module.Help })));
-const UserProfile = lazy(() => import("./pages/UserProfile").then(module => ({ default: module.UserProfile })));
-const CargoPool = lazy(() => import("./pages/CargoPool").then(module => ({ default: module.CargoPool })));
-const NotificationCenter = lazy(() => import("./pages/NotificationCenter").then(module => ({ default: module.NotificationCenter })));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Lazy load pages for better performance
+const Index = lazy(() => import("@/pages/Index"));
+const SendPackage = lazy(() => import("@/pages/SendPackage").then(module => ({ default: module.SendPackage })));
+const TrackOrder = lazy(() => import("@/pages/TrackOrder").then(module => ({ default: module.TrackOrder })));
+const Dashboard = lazy(() => import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })));
+const Auth = lazy(() => import("@/pages/Auth").then(module => ({ default: module.Auth })));
+const CargoPool = lazy(() => import("@/pages/CargoPool").then(module => ({ default: module.CargoPool })));
+const RiderApplication = lazy(() => import("@/pages/RiderApplication").then(module => ({ default: module.RiderApplication })));
+const RiderDashboard = lazy(() => import("@/pages/RiderDashboard").then(module => ({ default: module.RiderDashboard })));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard").then(module => ({ default: module.AdminDashboard })));
+const UserProfile = lazy(() => import("@/pages/UserProfile").then(module => ({ default: module.UserProfile })));
+const NotificationCenter = lazy(() => import("@/pages/NotificationCenter").then(module => ({ default: module.NotificationCenter })));
+const Contact = lazy(() => import("@/pages/Contact").then(module => ({ default: module.Contact })));
+const Help = lazy(() => import("@/pages/Help").then(module => ({ default: module.Help })));
+const Pricing = lazy(() => import("@/pages/Pricing").then(module => ({ default: module.Pricing })));
+const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess").then(module => ({ default: module.PaymentSuccess })));
+const WhatsAppDemo = lazy(() => import("@/pages/WhatsAppDemo").then(module => ({ default: module.WhatsAppDemo })));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <Toaster />
+        <Router>
           <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1">
-              <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><LoadingSpinner size="lg" /></div>}>
+              <Suspense fallback={
+                <div className="flex items-center justify-center min-h-[60vh]">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              }>
                 <Routes>
                   <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/rider-dashboard" element={<RiderDashboard />} />
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/send" element={<SendPackage />} />
                   <Route path="/track" element={<TrackOrder />} />
-                  <Route path="/whatsapp" element={<WhatsAppDemo />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/auth" element={<ProtectedRoute requireAuth={false}><Auth /></ProtectedRoute>} />
+                  <Route path="/cargopool" element={<CargoPool />} />
                   <Route path="/rider" element={<RiderApplication />} />
-                  <Route path="/pricing" element={<Pricing />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/help" element={<Help />} />
-                  <Route path="/profile" element={<UserProfile />} />
-                  <Route path="/cargopool" element={<CargoPool />} />
-                  <Route path="/notifications" element={<NotificationCenter />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/whatsapp" element={<WhatsAppDemo />} />
+                  
+                  {/* Protected Routes */}
+                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/rider-dashboard" element={<ProtectedRoute><RiderDashboard /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                  <Route path="/notifications" element={<ProtectedRoute><NotificationCenter /></ProtectedRoute>} />
+                  <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             </main>
             <Footer />
           </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
   </ErrorBoundary>
 );
 
