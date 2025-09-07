@@ -17,3 +17,24 @@ verify_jwt = true
 
 [functions.update-order-status]
 verify_jwt = true
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.create-shared-route]
+verify_jwt = true
+
+[functions.book-shared-route]
+verify_jwt = true
+
+[functions.create-paystack-payment]
+verify_jwt = true
+
+[functions.verify-paystack-payment]
+verify_jwt = false
+
+[functions.upload-file]
+verify_jwt = true
+
+[functions.send-sms]
+verify_jwt = false
