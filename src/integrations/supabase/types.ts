@@ -89,6 +89,33 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          message_type: string | null
+          order_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          message_type?: string | null
+          order_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          message_type?: string | null
+          order_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -241,6 +268,84 @@ export type Database = {
         }
         Relationships: []
       }
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          order_id: string
+          rating: number
+          rider_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          order_id: string
+          rating: number
+          rider_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          rider_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rider_earnings: {
+        Row: {
+          base_amount: number
+          bonus_amount: number | null
+          commission_amount: number
+          commission_rate: number | null
+          created_at: string
+          id: string
+          net_amount: number
+          order_id: string
+          paid_at: string | null
+          rider_id: string
+          status: string | null
+          total_amount: number
+        }
+        Insert: {
+          base_amount: number
+          bonus_amount?: number | null
+          commission_amount: number
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          net_amount: number
+          order_id: string
+          paid_at?: string | null
+          rider_id: string
+          status?: string | null
+          total_amount: number
+        }
+        Update: {
+          base_amount?: number
+          bonus_amount?: number | null
+          commission_amount?: number
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          net_amount?: number
+          order_id?: string
+          paid_at?: string | null
+          rider_id?: string
+          status?: string | null
+          total_amount?: number
+        }
+        Relationships: []
+      }
       riders: {
         Row: {
           city: string | null
@@ -385,6 +490,80 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          created_at: string
+          description: string
+          id: string
+          priority: string | null
+          status: string | null
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          priority?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ticket_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_staff: boolean | null
+          message: string
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_staff?: boolean | null
+          message: string
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_staff?: boolean | null
+          message?: string
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
             referencedColumns: ["id"]
           },
         ]
