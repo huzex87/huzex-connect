@@ -106,6 +106,13 @@ export const Contact = () => {
       details: "15 Murtala Mohammed Way\nSabon Gari, Kano",
       phone: "+234 901 000 0003",
       hours: "Mon-Fri: 8AM-6PM"
+    },
+    {
+      city: "Kaduna",
+      address: "Central Business Area",
+      details: "22 Constitution Road\nKaduna North, Kaduna",
+      phone: "+234 901 000 0004",
+      hours: "Mon-Fri: 8AM-6PM"
     }
   ];
 
