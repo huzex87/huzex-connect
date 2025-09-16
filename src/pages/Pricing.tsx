@@ -73,9 +73,14 @@ export const Pricing = () => {
   const cities = [
     { from: "Katsina", to: "Abuja", economy: "₦3,200", next: "₦5,200", same: "₦8,200" },
     { from: "Katsina", to: "Kano", economy: "₦2,800", next: "₦4,800", same: "₦7,800" },
+    { from: "Katsina", to: "Kaduna", economy: "₦3,500", next: "₦5,500", same: "₦8,500" },
     { from: "Abuja", to: "Katsina", economy: "₦3,200", next: "₦5,200", same: "₦8,200" },
     { from: "Abuja", to: "Kano", economy: "₦3,500", next: "₦5,500", same: "₦8,500" },
-    { from: "Kano", to: "Katsina", economy: "₦2,800", next: "₦4,800", same: "₦7,800" }
+    { from: "Abuja", to: "Kaduna", economy: "₦2,500", next: "₦4,500", same: "₦7,500" },
+    { from: "Kano", to: "Katsina", economy: "₦2,800", next: "₦4,800", same: "₦7,800" },
+    { from: "Kano", to: "Kaduna", economy: "₦3,800", next: "₦5,800", same: "₦8,800" },
+    { from: "Kaduna", to: "Katsina", economy: "₦3,500", next: "₦5,500", same: "₦8,500" },
+    { from: "Kaduna", to: "Abuja", economy: "₦2,500", next: "₦4,500", same: "₦7,500" }
   ];
 
   return (
