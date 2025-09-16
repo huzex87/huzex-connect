@@ -87,9 +87,9 @@ export const Contact = () => {
 
   const offices = [
     {
-      city: "Lagos",
-      address: "Victoria Island Business District",
-      details: "Plot 15, Karimu Kotun Street\nVictoria Island, Lagos",
+      city: "Katsina",
+      address: "Government Reserved Area",
+      details: "3 Ibrahim Coomassie Road\nGRA Ring Road, Katsina",
       phone: "+234 901 000 0001",
       hours: "Mon-Fri: 8AM-6PM"
     },
@@ -101,9 +101,9 @@ export const Contact = () => {
       hours: "Mon-Fri: 8AM-6PM"
     },
     {
-      city: "Port Harcourt",
-      address: "Government Reserved Area",
-      details: "12 Aba Road, GRA Phase 2\nPort Harcourt, Rivers",
+      city: "Kano",
+      address: "Sabon Gari Business District",
+      details: "15 Murtala Mohammed Way\nSabon Gari, Kano",
       phone: "+234 901 000 0003",
       hours: "Mon-Fri: 8AM-6PM"
     }

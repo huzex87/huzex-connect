@@ -71,11 +71,11 @@ export const Pricing = () => {
   ];
 
   const cities = [
-    { from: "Lagos", to: "Abuja", economy: "₦3,500", next: "₦5,500", same: "₦8,500" },
-    { from: "Lagos", to: "Port Harcourt", economy: "₦4,200", next: "₦6,200", same: "₦9,200" },
-    { from: "Abuja", to: "Kano", economy: "₦3,200", next: "₦5,200", same: "₦8,200" },
-    { from: "Lagos", to: "Ibadan", economy: "₦2,800", next: "₦4,800", same: "₦7,800" },
-    { from: "Abuja", to: "Lagos", economy: "₦3,500", next: "₦5,500", same: "₦8,500" }
+    { from: "Katsina", to: "Abuja", economy: "₦3,200", next: "₦5,200", same: "₦8,200" },
+    { from: "Katsina", to: "Kano", economy: "₦2,800", next: "₦4,800", same: "₦7,800" },
+    { from: "Abuja", to: "Katsina", economy: "₦3,200", next: "₦5,200", same: "₦8,200" },
+    { from: "Abuja", to: "Kano", economy: "₦3,500", next: "₦5,500", same: "₦8,500" },
+    { from: "Kano", to: "Katsina", economy: "₦2,800", next: "₦4,800", same: "₦7,800" }
   ];
 
   return (
