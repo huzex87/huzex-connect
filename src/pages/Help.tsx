@@ -65,7 +65,7 @@ export const Help = () => {
         },
         {
           question: "Do you deliver on weekends?",
-          answer: "Yes, we deliver Monday to Saturday. Sunday deliveries are available for same-day packages in Lagos and Abuja at an additional cost."
+          answer: "Yes, we deliver Monday to Saturday. Sunday deliveries are available for same-day packages in Katsina and Abuja at an additional cost."
         }
       ]
     },

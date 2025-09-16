@@ -106,7 +106,7 @@ export const WhatsAppDemo = () => {
       setOrderData({ step: "pickup" });
       addBotMessage(
         "📦 *Send Package*\n\nGreat! I'll help you send your package. Let's start with the pickup location.\n\nWhich city should we pick up from?",
-        ["🏙️ Lagos", "🏛️ Abuja", "🏭 Port Harcourt", "🏪 Kano", "📍 Other"]
+        ["🏙️ Katsina", "🏛️ Abuja", "🏭 Kano", "🏪 Kaduna", "📍 Other"]
       );
     } else if (input.includes("Track") || input.includes("track")) {
       setCurrentFlow("track_delivery");
@@ -140,7 +140,7 @@ export const WhatsAppDemo = () => {
       setOrderData({ ...orderData, pickup: input, step: "dropoff" });
       addBotMessage(
         `✅ Pickup: ${input}\n\nNow, where should we deliver your package?`,
-        ["🏙️ Lagos", "🏛️ Abuja", "🏭 Port Harcourt", "🏪 Kano", "📍 Other"]
+        ["🏙️ Katsina", "🏛️ Abuja", "🏭 Kano", "🏪 Kaduna", "📍 Other"]
       );
     } else if (step === "dropoff") {
       setOrderData({ ...orderData, dropoff: input, step: "item" });
@@ -179,7 +179,7 @@ export const WhatsAppDemo = () => {
   const handleTrackFlow = (input: string) => {
     if (input.match(/HX-\d{4}-\d{6}/)) {
       addBotMessage(
-        `📍 *Order Status: ${input}*\n\n✅ Status: En Route\n📍 From: Lagos (Victoria Island)\n📍 To: Abuja (Central)\n📦 Item: Electronics\n🚛 Rider: Ibrahim M.\n📞 Rider Phone: +234 901 234 5678\n⏰ ETA: Today 4:00 PM\n\n🔗 Live Tracking: https://track.huzex/${input}\n\nYour package is on the way!`,
+        `📍 *Order Status: ${input}*\n\n✅ Status: En Route\n📍 From: Katsina (GRA)\n📍 To: Abuja (Central)\n📦 Item: Electronics\n🚛 Rider: Ibrahim M.\n📞 Rider Phone: +234 901 234 5678\n⏰ ETA: Today 4:00 PM\n\n🔗 Live Tracking: https://track.huzex/${input}\n\nYour package is on the way!`,
         ["📞 Call Rider", "📦 Send Another Package", "💬 Main Menu"]
       );
     } else {
@@ -202,7 +202,7 @@ export const WhatsAppDemo = () => {
       setOrderData({ ...orderData, phone: input, step: "city" });
       addBotMessage(
         `✅ Phone: ${input}\n\nWhich city are you based in?`,
-        ["🏙️ Lagos", "🏛️ Abuja", "🏭 Port Harcourt", "📍 Other"]
+        ["🏙️ Katsina", "🏛️ Abuja", "🏭 Kano", "📍 Other"]
       );
     } else if (step === "city") {
       setOrderData({ ...orderData, city: input, step: "vehicle" });

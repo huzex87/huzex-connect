@@ -91,14 +91,10 @@ export const RiderApplication = () => {
   ];
 
   const cities = [
-    "Lagos",
+    "Katsina",
     "Abuja", 
-    "Port Harcourt",
     "Kano",
-    "Ibadan",
-    "Kaduna",
-    "Enugu",
-    "Onitsha"
+    "Kaduna"
   ];
 
   if (isSubmitted) {

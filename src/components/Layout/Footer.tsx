@@ -66,8 +66,8 @@ export const Footer = () => {
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <span className="text-muted-foreground">
-                  Victoria Island, Lagos<br />
-                  Abuja • Port Harcourt
+                  3 Ibrahim Coomassie Road, GRA Ring Road, Katsina<br />
+                  Abuja • Kano • Kaduna
                 </span>
               </div>
             </div>

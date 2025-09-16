@@ -421,7 +421,7 @@ export const AdminDashboard = () => {
                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
                       <div>
                         <p className="text-sm font-medium">3 Unassigned Orders</p>
-                        <p className="text-xs text-muted-foreground">Lagos to Abuja route</p>
+                        <p className="text-xs text-muted-foreground">Katsina to Abuja route</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3 p-3 bg-green-50 border border-green-200 rounded-lg">

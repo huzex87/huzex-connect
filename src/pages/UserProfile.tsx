@@ -379,7 +379,7 @@ export const UserProfile = () => {
                     { title: "Default Delivery Speed", desc: "Choose your preferred delivery speed", value: "Next Day" },
                     { title: "Default Payment Method", desc: "Set your preferred payment option", value: "Pay on Delivery" },
                     { title: "Language", desc: "Choose your preferred language", value: "English" },
-                    { title: "Time Zone", desc: "Set your time zone", value: "Africa/Lagos" }
+                    { title: "Time Zone", desc: "Set your time zone", value: "Africa/Katsina" }
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>

@@ -88,12 +88,14 @@ export const SendPackage = () => {
   ];
 
   const cities = [
-    "Lagos (Victoria Island)",
-    "Lagos (Ikeja)",
-    "Abuja (Central)",
-    "Port Harcourt (GRA)",
+    "Katsina (GRA)",
+    "Katsina (Central)",
+    "Abuja (Central Business District)",
+    "Abuja (Jabi)",
     "Kano (Sabon Gari)",
-    "Ibadan (Bodija)"
+    "Kano (Fagge)",
+    "Kaduna (Central Business Area)",
+    "Kaduna (North)"
   ];
 
   return (
