@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 import { 
   Package, 
   Clock, 
@@ -17,73 +17,21 @@ import {
   Truck,
   Plus,
   RotateCcw,
-  User
+  User,
+  TrendingUp,
+  Star,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { useRealTimeOrders } from '@/hooks/useRealTimeOrders';
+import { formatDistanceToNow } from 'date-fns';
 
 export const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-      
-      // Set up real-time updates for orders
-      const channel = supabase
-        .channel('dashboard-orders')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'orders',
-            filter: `customer_id=eq.${user.id}`
-          },
-          () => {
-            fetchOrders();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [user]);
-
-  const fetchOrders = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        riders (
-          name,
-          phone,
-          rating
-        )
-      `)
-      .eq('customer_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Error fetching orders",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      setOrders(data || []);
-    }
-    setLoading(false);
-  };
+  const { orders, loading, getActiveOrders, getOrderStats, refetch } = useRealTimeOrders();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -112,9 +60,8 @@ export const Dashboard = () => {
   }
 
   const recentOrders = orders.slice(0, 5);
-  const activeOrders = orders.filter(order => 
-    !['delivered', 'cancelled'].includes(order.status)
-  );
+  const activeOrders = getActiveOrders();
+  const stats = getOrderStats();
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -135,65 +82,125 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Orders</p>
-                <p className="text-2xl font-bold">{orders.length}</p>
+                <p className="text-3xl font-bold text-primary">{stats.total}</p>
+                <div className="flex items-center mt-2 text-xs text-muted-foreground">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +12% from last month
+                </div>
               </div>
-              <Package className="h-8 w-8 text-primary" />
+              <div className="relative">
+                <Package className="h-10 w-10 text-primary opacity-80" />
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-primary rounded-full animate-pulse" />
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent border-secondary/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Active Orders</p>
-                <p className="text-2xl font-bold">{activeOrders.length}</p>
+                <p className="text-3xl font-bold text-secondary">{stats.active}</p>
+                <Progress value={(stats.active / Math.max(stats.total, 1)) * 100} className="mt-2 h-1" />
               </div>
-              <Truck className="h-8 w-8 text-secondary" />
+              <Truck className="h-10 w-10 text-secondary opacity-80" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border-green-500/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Delivered</p>
-                <p className="text-2xl font-bold">
-                  {orders.filter(o => o.status === 'delivered').length}
-                </p>
+                <p className="text-3xl font-bold text-green-600">{stats.delivered}</p>
+                <div className="flex items-center mt-2 text-xs text-green-600">
+                  <Star className="h-3 w-3 mr-1" />
+                  {stats.total > 0 ? Math.round((stats.delivered / stats.total) * 100) : 0}% success rate
+                </div>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-10 w-10 text-green-500 opacity-80" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-accent/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">This Month</p>
-                <p className="text-2xl font-bold">
-                  {orders.filter(o => {
-                    const orderDate = new Date(o.created_at);
-                    const now = new Date();
-                    return orderDate.getMonth() === now.getMonth() && 
-                           orderDate.getFullYear() === now.getFullYear();
-                  }).length}
-                </p>
+                <p className="text-3xl font-bold text-accent">{stats.thisMonth}</p>
+                <div className="flex items-center mt-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Current month
+                </div>
               </div>
-              <Clock className="h-8 w-8 text-accent" />
+              <Clock className="h-10 w-10 text-accent opacity-80" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Insights */}
+      {stats.total > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <span>Quick Insights</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-2xl font-bold text-primary mb-1">{stats.pending}</div>
+                  <div className="text-sm text-muted-foreground">Pending</div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-2xl font-bold text-orange-500 mb-1">{stats.inTransit}</div>
+                  <div className="text-sm text-muted-foreground">In Transit</div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-500 mb-1">
+                    {stats.total > 0 ? Math.round((stats.delivered / stats.total) * 100) : 0}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Success Rate</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentOrders.slice(0, 3).map((order) => (
+                  <div key={order.id} className="flex items-center space-x-3 text-sm">
+                    <div className={`w-2 h-2 rounded-full ${getStatusColor(order.status)}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{order.order_id}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Main Content */}
       <Tabs defaultValue="active" className="space-y-4">
@@ -302,7 +309,7 @@ export const Dashboard = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">All Orders</h3>
-                <Button variant="outline" size="sm" onClick={fetchOrders}>
+                <Button variant="outline" size="sm" onClick={refetch}>
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Refresh
                 </Button>
